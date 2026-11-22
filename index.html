@@ -1,0 +1,1574 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>汉字超级侦探社：四年级首战《踏上学习的征途》</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Noto Sans SC', sans-serif;
+      background: linear-gradient(135deg, #FEF9C3 0%, #FFEDD5 50%, #E0F2FE 100%);
+      min-height: 100vh;
+      user-select: none;
+    }
+    .title-font {
+      font-family: 'ZCOOL KuaiLe', 'Noto Sans SC', cursive, sans-serif;
+    }
+    .hanzi-box {
+      font-family: 'KaiTi', 'STKaiti', 'Noto Sans SC', serif;
+    }
+    @keyframes floatSlow {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-6px) rotate(2deg); }
+    }
+    .animate-float {
+      animation: floatSlow 3s ease-in-out infinite;
+    }
+    @keyframes mosquitoFly {
+      0% { transform: translate(0, 0) rotate(0deg); }
+      25% { transform: translate(35px, -25px) rotate(12deg); }
+      50% { transform: translate(-25px, -40px) rotate(-10deg); }
+      75% { transform: translate(30px, 15px) rotate(8deg); }
+      100% { transform: translate(0, 0) rotate(0deg); }
+    }
+    .mosquito-move {
+      animation: mosquitoFly 2.2s ease-in-out infinite;
+    }
+    @keyframes pulseRing {
+      0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.5); }
+      70% { box-shadow: 0 0 0 12px rgba(245, 158, 11, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+    }
+    .speaking-active {
+      animation: pulseRing 1.5s infinite;
+      border-color: #F59E0B !important;
+      background-color: #FFFBEB !important;
+    }
+    .btn-3d {
+      transition: all 0.15s ease;
+      box-shadow: 0 4px 0 rgba(0, 0, 0, 0.15);
+    }
+    .btn-3d:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 rgba(0, 0, 0, 0.15);
+    }
+  </style>
+</head>
+<body class="text-slate-800 pb-12">
+
+  <!-- Top Navigation & Detective Status Bar -->
+  <header class="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b-2 border-amber-200 shadow-sm">
+    <div class="max-w-4xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2.5">
+        <div class="w-10 h-10 rounded-2xl bg-amber-400 flex items-center justify-center text-white shadow-inner text-xl">
+          🕵️
+        </div>
+        <div>
+          <h1 class="title-font text-lg sm:text-xl text-amber-800 tracking-wide">汉字超级侦探社</h1>
+          <p class="text-xs text-slate-500 font-medium">四年级第一课《踏上学习的征途》特训</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <!-- Voice Status Indicator -->
+        <div id="voiceBadge" class="hidden sm:flex items-center gap-1.5 text-xs bg-sky-50 text-sky-700 border border-sky-200 px-2.5 py-1 rounded-full">
+          <span>🎙️</span>
+          <span id="voiceNameLabel">标准华语已就绪</span>
+        </div>
+        <!-- Stars Counter -->
+        <div class="flex items-center gap-1.5 bg-amber-100 border border-amber-300 px-3 py-1 rounded-full font-bold text-amber-800">
+          <span>⭐</span>
+          <span id="starCount">0</span>
+        </div>
+        <!-- Teacher Quick Report Button -->
+        <button onclick="jumpToReport()" title="老师查看诊断报告" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 px-2.5 py-1.5 rounded-xl border border-slate-300 transition">
+          📋 老师后台
+        </button>
+      </div>
+    </div>
+
+    <!-- Overall Stage Progress Bar -->
+    <div class="max-w-4xl mx-auto px-4 pb-2.5">
+      <div class="flex items-center justify-between text-xs font-bold text-slate-500 mb-1">
+        <span id="stageLabel">准备出发</span>
+        <span id="progressText">0%</span>
+      </div>
+      <div class="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden">
+        <div id="progressBar" class="h-full bg-gradient-to-r from-amber-400 via-orange-400 to-emerald-500 transition-all duration-500 rounded-full" style="width: 0%"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Interactive Stage Container -->
+  <main id="appContainer" class="max-w-3xl mx-auto px-4 pt-6">
+    <!-- Dynamic Screens Rendered Here -->
+  </main>
+
+  <!-- Toast Feedback Banner -->
+  <div id="toastBanner" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 transition-all duration-300 transform translate-y-4">
+    <div id="toastContent" class="px-6 py-3 rounded-2xl shadow-xl font-bold text-base flex items-center gap-2 border-2"></div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // 1. AUDIO ENGINE (Web Audio SFX + Standard Mandarin TTS)
+    // =========================================================================
+    const AudioEngine = {
+      ctx: null,
+      selectedVoice: null,
+
+      init() {
+        if (!this.ctx) {
+          this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        this.loadBestMandarinVoice();
+        if (window.speechSynthesis) {
+          window.speechSynthesis.onvoiceschanged = () => this.loadBestMandarinVoice();
+        }
+      },
+
+      loadBestMandarinVoice() {
+        if (!window.speechSynthesis) return;
+        const voices = window.speechSynthesis.getVoices();
+        if (!voices.length) return;
+
+        // Prioritize standard Beijing Putonghua / broadcast quality zh-CN voices
+        const preferredKeywords = [
+          'Xiaoxiao', 'Yunxi', 'Yunjian', 'Xiaoyi', // Microsoft Natural Chinese
+          'Tingting', 'Ting-Ting', 'Sinji',          // Apple standard Mandarin
+          'Google 普通话', 'Microsoft Huihui', 'Yaoyao', 'Kangkang',
+          'zh-CN', 'cmn-Hans-CN'
+        ];
+
+        let best = null;
+        for (const kw of preferredKeywords) {
+          best = voices.find(v =>
+            (v.lang.includes('zh-CN') || v.lang.includes('cmn-Hans') || v.lang.toLowerCase().includes('zh_cn')) &&
+            (v.name.includes(kw) || v.lang.includes(kw))
+          );
+          if (best) break;
+        }
+        if (!best) {
+          best = voices.find(v => v.lang.startsWith('zh'));
+        }
+        if (best) {
+          this.selectedVoice = best;
+          const label = document.getElementById('voiceNameLabel');
+          if (label) {
+            label.textContent = `播音华语: ${best.name.replace(/Microsoft |Google |Online \(Natural\) - /g, '').slice(0, 14)}`;
+          }
+        }
+      },
+
+      speak(text, options = {}) {
+        if (!window.speechSynthesis) return;
+        window.speechSynthesis.cancel();
+
+        const utterance = new SpeechSynthesisUtterance(text);
+        if (this.selectedVoice) {
+          utterance.voice = this.selectedVoice;
+        }
+        utterance.lang = 'zh-CN';
+        utterance.rate = options.rate || 0.92; // Slightly clear & warm for Year 4 students
+        utterance.pitch = options.pitch || 1.02;
+
+        if (options.onStart) utterance.onstart = options.onStart;
+        if (options.onEnd) utterance.onend = options.onEnd;
+        if (options.onError) utterance.onerror = options.onEnd;
+
+        window.speechSynthesis.speak(utterance);
+      },
+
+      stopSpeak() {
+        if (window.speechSynthesis) {
+          window.speechSynthesis.cancel();
+        }
+      },
+
+      playTone(freq, type = 'sine', duration = 0.15, delay = 0) {
+        try {
+          if (!this.ctx) this.init();
+          if (this.ctx.state === 'suspended') this.ctx.resume();
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, this.ctx.currentTime + delay);
+          gain.gain.setValueAtTime(0.15, this.ctx.currentTime + delay);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + delay + duration);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(this.ctx.currentTime + delay);
+          osc.stop(this.ctx.currentTime + delay + duration);
+        } catch (e) {}
+      },
+
+      sfxCorrect() {
+        this.playTone(523.25, 'triangle', 0.12, 0);
+        this.playTone(659.25, 'triangle', 0.12, 0.1);
+        this.playTone(783.99, 'triangle', 0.25, 0.2);
+      },
+
+      sfxWrong() {
+        this.playTone(300, 'sine', 0.18, 0);
+        this.playTone(250, 'sine', 0.22, 0.15);
+      },
+
+      sfxClick() {
+        this.playTone(600, 'sine', 0.06, 0);
+      },
+
+      sfxFanfare() {
+        [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => {
+          this.playTone(f, 'triangle', 0.25, i * 0.12);
+        });
+      }
+    };
+
+    // =========================================================================
+    // 2. CURRICULUM DATA: KSSR SEMAKAN YEAR 4 LESSON 1《踏上学习的征途》
+    // =========================================================================
+
+    // Stage 1: Warm-up Visual Discrimination (4 items)
+    const STAGE1_QUESTIONS = [
+      {
+        id: 's1_1',
+        prompt: '热身眼力第 1 题：找出混在里面的【太】字！',
+        audioText: '找出混在里面的太字！',
+        target: '太',
+        distractor: '大',
+        hint: '仔细看，哪一个字下面多了一点？'
+      },
+      {
+        id: 's1_2',
+        prompt: '热身眼力第 2 题：找出躲起来的【目】字！',
+        audioText: '找出躲起来的目字！',
+        target: '目',
+        distractor: '日',
+        hint: '眼睛的“目”，里面有两横哦！'
+      },
+      {
+        id: 's1_3',
+        prompt: '热身眼力第 3 题：找出课本里的【扑】字！',
+        audioText: '找出课本里的扑字！',
+        target: '扑',
+        distractor: '打',
+        hint: '右边是一个“卜”字，表示扑上去！'
+      },
+      {
+        id: 's1_4',
+        prompt: '热身眼力第 4 题：找出第一课的【蚊】字！',
+        audioText: '找出第一课的蚊字！',
+        target: '蚊',
+        distractor: '纹',
+        hint: '蚊子是小昆虫，左边是“虫”字旁！'
+      }
+    ];
+
+    // Stage 2: Lesson 1 Radical Decoding (8 items covering core Lesson 1 vocabulary)
+    const STAGE2_QUESTIONS = [
+      {
+        id: 's2_1',
+        sentence: '课文原句：“仿佛看见千千万万只横行的【螃蟹】。”',
+        targetWord: '螃蟹',
+        radicalName: '虫字旁 (虫)',
+        question: '“螃”和“蟹”都有“虫”字旁，猜猜它们属于哪一类？',
+        audioText: '螃和蟹都有虫字旁，猜猜它们属于哪一类？',
+        options: [
+          { text: '🦀 爬行的小动物 / 节肢生物', correct: true },
+          { text: '🌳 森林里的大树', correct: false },
+          { text: '☁️ 天上的云朵', correct: false }
+        ],
+        explanation: '答对了！古人把昆虫、虾蟹等小生物都归入“虫”字旁家族。'
+      },
+      {
+        id: 's2_2',
+        sentence: '课文原句：“一只不识相的【蚊】子飞过来【叮】咬我。”',
+        targetWord: '蚊、叮',
+        radicalName: '虫字旁 + 口字旁',
+        question: '“蚊”用虫字旁，那为什么“叮”用“口”字旁呢？',
+        audioText: '蚊用虫字旁，那为什么叮用口字旁呢？',
+        options: [
+          { text: '👄 表示用嘴巴去咬或发出声音', correct: true },
+          { text: '👣 表示用脚踢', correct: false },
+          { text: '💧 表示用水洗', correct: false }
+        ],
+        explanation: '太聪明了！“叮”需要用嘴巴刺下去，所以是“口”字旁！'
+      },
+      {
+        id: 's2_3',
+        sentence: '课文原句：“可恶的蚊子又飞过来了，似乎在向我叫【嚣】。”',
+        targetWord: '嚣 (xiāo)',
+        radicalName: '四个“口”字',
+        question: '你看“嚣”字上下左右足足有四个“口”！它是什么意思？',
+        audioText: '你看嚣字上下左右足足有四个口！它是什么意思？',
+        options: [
+          { text: '📢 吵闹、大喊大叫挑衅', correct: true },
+          { text: '😴 静静地睡觉', correct: false },
+          { text: '🏃 跑得非常快', correct: false }
+        ],
+        explanation: '超强观察力！四个嘴巴一起喊，就是“喧哗、吵闹挑衅”的意思！'
+      },
+      {
+        id: 's2_4',
+        sentence: '课文原句：“我心里又急又气，眼泪迅速夺【眶】而出。”',
+        targetWord: '眶 (kuàng)',
+        radicalName: '目字旁 (目)',
+        question: '“眶”字左边是“目”（眼睛），“夺眶而出”是指眼泪从哪里流出来？',
+        audioText: '眶字左边是目，夺眶而出是指眼泪从哪里流出来？',
+        options: [
+          { text: '👁️ 眼睛的四周（眼眶）', correct: true },
+          { text: '👂 耳朵旁边', correct: false },
+          { text: '🖐️ 手掌心', correct: false }
+        ],
+        explanation: '完全正确！“目”字旁跟眼睛有关，眼眶就是眼睛周围的框框。'
+      },
+      {
+        id: 's2_5',
+        sentence: '课文原句：“我拿起电蚊拍，【扑】上扑下地追打蚊子。”',
+        targetWord: '扑 (pū)',
+        radicalName: '提手旁 (扌)',
+        question: '“扑”字是提手旁，下面哪个字跟“扑”是同一家族（都是手部动作）？',
+        audioText: '扑字是提手旁，下面哪个字跟扑是同一家族，都是手部动作？',
+        options: [
+          { text: '✋ 提（提笔）', correct: true },
+          { text: '👣 跃（跃入）', correct: false },
+          { text: '💧 泪（眼泪）', correct: false }
+        ],
+        explanation: '火眼金睛！“扑”和“提”都是提手旁（扌），都需要用手来做动作。'
+      },
+      {
+        id: 's2_6',
+        sentence: '课文原句：“妈妈等我哭够了、气消了才【递】给我一本书。”',
+        targetWord: '递、迁',
+        radicalName: '走之底 (辶)',
+        question: '“递”和“搬迁”的“迁”都有“走之底(辶)”，这个偏旁通常和什么有关？',
+        audioText: '递和搬迁的迁都有走之底，这个偏旁通常和什么有关？',
+        options: [
+          { text: '🚶 走路、移动、传递过去', correct: true },
+          { text: '🔥 生火煮饭', correct: false },
+          { text: '📖 看书画画', correct: false }
+        ],
+        explanation: '太棒了！走之底就像一条路，表示移动、搬家（迁）或传过去（递）。'
+      },
+      {
+        id: 's2_7',
+        sentence: '课文原句：“他用英语和【淡】米尔语跟同学【沟】通。”',
+        targetWord: '沟、淡',
+        radicalName: '三点水 (氵)',
+        question: '“沟”和“淡”都有三点水，为什么“沟通”用“沟”字呢？',
+        audioText: '沟和淡都有三点水，为什么沟通要用沟字呢？',
+        options: [
+          { text: '🌊 像水流一样顺畅地把两边连接起来', correct: true },
+          { text: '🪨 像石头一样硬邦邦', correct: false },
+          { text: '⚡ 像闪电一样劈开', correct: false }
+        ],
+        explanation: '理解得真好！水沟让水流相通，人与人说话顺畅连接就叫“沟通”。'
+      },
+      {
+        id: 's2_8',
+        sentence: '课文原句：“除了【译】电讯稿，他还立志干一番大事业。”',
+        targetWord: '译、识',
+        radicalName: '言字旁 (讠)',
+        question: '“译”（翻译）和“识”（不识相）都是言字旁，这跟什么有关？',
+        audioText: '译和识都是言字旁，这跟什么有关？',
+        options: [
+          { text: '🗣️ 语言、说话和文字知识', correct: true },
+          { text: '🍎 好吃的水果', correct: false },
+          { text: '🚗 交通工具', correct: false }
+        ],
+        explanation: '满分推理！言字旁（讠）代表说话和语言，把一种语言变成另一种语言就是“译”。'
+      }
+    ];
+
+    // Stage 3: Visual Story Mnemonics (2 groups x 4 core words = 8 words)
+    const STAGE3_GROUPS = [
+      {
+        groupIndex: 0,
+        title: '第一组：课文前半段核心词 (4个)',
+        cards: [
+          {
+            word: '征途',
+            pinyin: 'zhēng tú',
+            meaning: '远行的路程（课文中指学习的新旅程）',
+            story: '左边“彳”是双人旁代表迈步走，右边“正”是走正道，踏上学习的“征途”！',
+            svg: `<svg viewBox="0 0 120 90" class="w-28 h-20 mx-auto">
+              <rect width="120" height="90" rx="14" fill="#FEF3C7"/>
+              <path d="M15 75 Q 55 45, 105 25" stroke="#F59E0B" stroke-width="6" fill="none" stroke-dasharray="8 4"/>
+              <circle cx="30" cy="58" r="8" fill="#2563EB"/>
+              <path d="M30 66 L30 80 M22 72 L38 72" stroke="#2563EB" stroke-width="4" stroke-linecap="round"/>
+              <polygon points="95,15 112,22 95,30" fill="#EF4444"/>
+              <line x1="95" y1="15" x2="95" y2="42" stroke="#78350F" stroke-width="3"/>
+            </svg>`
+          },
+          {
+            word: '螃蟹',
+            pinyin: 'páng xiè',
+            meaning: '横着爬行、有两只大钳子的动物',
+            story: '两个字都有“虫”字旁！作者看到英文作业里的字母，就像横行的“螃蟹”！',
+            svg: `<svg viewBox="0 0 120 90" class="w-28 h-20 mx-auto">
+              <rect width="120" height="90" rx="14" fill="#FEE2E2"/>
+              <ellipse cx="60" cy="52" rx="24" ry="16" fill="#EF4444"/>
+              <circle cx="52" cy="36" r="4" fill="#1E293B"/>
+              <circle cx="68" cy="36" r="4" fill="#1E293B"/>
+              <path d="M36 45 Q 20 30, 32 22 Q 40 30, 36 38" fill="#DC2626"/>
+              <path d="M84 45 Q 100 30, 88 22 Q 80 30, 84 38" fill="#DC2626"/>
+              <path d="M38 56 L22 68 M42 62 L28 75 M82 56 L98 68 M78 62 L92 75" stroke="#B91C1C" stroke-width="3" stroke-linecap="round"/>
+            </svg>`
+          },
+          {
+            word: '蚊子',
+            pinyin: 'wén zi',
+            meaning: '会飞、爱叮咬人的小昆虫',
+            story: '左边“虫”代表小昆虫，右边“文”像蚊子交叉的翅膀，嗡嗡飞来叮人！',
+            svg: `<svg viewBox="0 0 120 90" class="w-28 h-20 mx-auto">
+              <rect width="120" height="90" rx="14" fill="#E0F2FE"/>
+              <ellipse cx="60" cy="48" rx="16" ry="7" fill="#334155"/>
+              <ellipse cx="52" cy="34" rx="12" ry="6" transform="rotate(-25 52 34)" fill="#93C5FD" opacity="0.85"/>
+              <ellipse cx="68" cy="34" rx="12" ry="6" transform="rotate(25 68 34)" fill="#93C5FD" opacity="0.85"/>
+              <line x1="76" y1="48" x2="94" y2="52" stroke="#EF4444" stroke-width="3"/>
+              <path d="M52 54 L44 72 M60 55 L60 74 M68 54 L76 72" stroke="#334155" stroke-width="2.5"/>
+            </svg>`
+          },
+          {
+            word: '叫嚣',
+            pinyin: 'jiào xiāo',
+            meaning: '大声吵闹、故意挑衅',
+            story: '“嚣”字有四个“口”围着一个“页”（头），像蚊子在头边嗡嗡乱叫挑衅！',
+            svg: `<svg viewBox="0 0 120 90" class="w-28 h-20 mx-auto">
+              <rect width="120" height="90" rx="14" fill="#FCE7F3"/>
+              <circle cx="60" cy="45" r="18" fill="#FBBF24"/>
+              <rect x="24" y="20" width="16" height="14" rx="3" fill="#EC4899"/>
+              <rect x="80" y="20" width="16" height="14" rx="3" fill="#EC4899"/>
+              <rect x="24" y="56" width="16" height="14" rx="3" fill="#EC4899"/>
+              <rect x="80" y="56" width="16" height="14" rx="3" fill="#EC4899"/>
+              <text x="60" y="51" text-anchor="middle" font-size="14" font-weight="bold" fill="#78350F">吵!</text>
+            </svg>`
+          }
+        ],
+        quiz: [
+          {
+            clue: '哪个词有“四个口”，表示蚊子在头边大喊大叫挑衅？',
+            answer: '叫嚣',
+            options: ['叫嚣', '征途', '螃蟹', '蚊子']
+          },
+          {
+            clue: '作者看英文作业时，觉得字母像什么横行的动物？',
+            answer: '螃蟹',
+            options: ['螃蟹', '蚊子', '叫嚣', '征途']
+          },
+          {
+            clue: '踏上学习的（   ），表示开始新的学习旅程。',
+            answer: '征途',
+            options: ['征途', '蚊子', '螃蟹', '叫嚣']
+          },
+          {
+            clue: '飞过来叮咬作者手臂，打也打不着的小昆虫是？',
+            answer: '蚊子',
+            options: ['蚊子', '螃蟹', '征途', '叫嚣']
+          }
+        ]
+      },
+      {
+        groupIndex: 1,
+        title: '第二组：李光前故事核心词 (4个)',
+        cards: [
+          {
+            word: '跃入',
+            pinyin: 'yuè rù',
+            meaning: '跳进来（一行烫金字跳进眼睛里）',
+            story: '左边“足”字旁代表脚，用力一跳就是“跃”！书名一下子跳进眼睛里。',
+            svg: `<svg viewBox="0 0 120 90" class="w-28 h-20 mx-auto">
+              <rect width="120" height="90" rx="14" fill="#DCFCE7"/>
+              <path d="M25 68 Q 60 15, 95 65" stroke="#16A34A" stroke-width="4" fill="none" stroke-dasharray="6 4"/>
+              <circle cx="60" cy="30" r="10" fill="#15803D"/>
+              <polygon points="90,62 102,68 92,74" fill="#16A34A"/>
+            </svg>`
+          },
+          {
+            word: '搬迁',
+            pinyin: 'bān qiān',
+            meaning: '从一个地方搬家到另一个地方',
+            story: '“迁”有走之底（辶），李光前10岁跟着父亲走出老家，“搬迁”到新加坡！',
+            svg: `<svg viewBox="0 0 120 90" class="w-28 h-20 mx-auto">
+              <rect width="120" height="90" rx="14" fill="#FEF3C7"/>
+              <polygon points="22,42 38,26 54,42" fill="#D97706"/>
+              <rect x="26" y="42" width="24" height="20" fill="#F59E0B"/>
+              <path d="M60 45 L80 45 M74 39 L80 45 L74 51" stroke="#2563EB" stroke-width="4" stroke-linecap="round"/>
+              <rect x="86" y="30" width="20" height="32" fill="#3B82F6"/>
+            </svg>`
+          },
+          {
+            word: '翻译',
+            pinyin: 'fān yì',
+            meaning: '把一种语言转换成另一种语言',
+            story: '“译”是言字旁（讠），用语言把英文和华文互相转换，就是“翻译”！',
+            svg: `<svg viewBox="0 0 120 90" class="w-28 h-20 mx-auto">
+              <rect width="120" height="90" rx="14" fill="#E0E7FF"/>
+              <rect x="16" y="26" width="34" height="32" rx="8" fill="#4F46E5"/>
+              <text x="33" y="47" text-anchor="middle" fill="white" font-size="14" font-weight="bold">ABC</text>
+              <path d="M54 42 L68 42" stroke="#4F46E5" stroke-width="3"/>
+              <rect x="70" y="26" width="34" height="32" rx="8" fill="#10B981"/>
+              <text x="87" y="47" text-anchor="middle" fill="white" font-size="14" font-weight="bold">华文</text>
+            </svg>`
+          },
+          {
+            word: '毅力',
+            pinyin: 'yì lì',
+            meaning: '坚定不放弃的精神力量',
+            story: '周末也坚持学中文、不向困难低头的超级能量，就叫做“毅力”！',
+            svg: `<svg viewBox="0 0 120 90" class="w-28 h-20 mx-auto">
+              <rect width="120" height="90" rx="14" fill="#FFEDD5"/>
+              <polygon points="60,14 71,36 95,39 77,56 82,80 60,68 38,80 43,56 25,39 49,36" fill="#F97316"/>
+              <text x="60" y="53" text-anchor="middle" fill="white" font-size="13" font-weight="bold">坚持</text>
+            </svg>`
+          }
+        ],
+        quiz: [
+          {
+            clue: '李光前10岁跟着父亲从老家（   ）到新加坡谋生。',
+            answer: '搬迁',
+            options: ['搬迁', '跃入', '翻译', '毅力']
+          },
+          {
+            clue: '左边是“足”字旁，表示一行烫金字跳进眼睛里的词是？',
+            answer: '跃入',
+            options: ['跃入', '搬迁', '翻译', '毅力']
+          },
+          {
+            clue: '“译”是言字旁，把英文电讯稿变成中文的工作叫？',
+            answer: '翻译',
+            options: ['翻译', '毅力', '搬迁', '跃入']
+          },
+          {
+            clue: '周末也坚持学习中文、绝不放弃的强大精神力量叫？',
+            answer: '毅力',
+            options: ['毅力', '翻译', '跃入', '搬迁']
+          }
+        ]
+      }
+    ];
+
+    // Stage 4: Paragraph-by-Paragraph Reading Comprehension (Paragraphs 1-4 of Lesson 1)
+    const STAGE4_PARAGRAPHS = [
+      {
+        paraNum: 1,
+        title: '第一段：面对英文作业的烦恼',
+        text: '在通明的灯光下，我打开未完成的英文作业。我看着摊在眼前的字母，仿佛看见千千万万只横行的螃蟹，正张牙舞爪地向我爬来，心里没来由的沉重，别说思考，就连提笔也没劲儿。',
+        questions: [
+          {
+            q: '第1题：作者看着英文作业里的字母，觉得它们像什么？',
+            options: [
+              '🦀 千千万万只横行的螃蟹',
+              '🦟 一群嗡嗡叫的蚊子',
+              '📚 一本厚厚的画册'
+            ],
+            correctIdx: 0,
+            feedback: '听得真仔细！作者觉得那些字母像千千万万只横行的螃蟹。'
+          },
+          {
+            q: '第2题：为什么作者“就连提笔也没劲儿”？',
+            options: [
+              '😔 因为觉得英文很难，心里很沉重、害怕',
+              '😴 因为太晚了想上床睡觉',
+              '✏️ 因为铅笔断了没法写字'
+            ],
+            correctIdx: 0,
+            feedback: '完全理解！遇到不会的功课心里沉重、没信心，就会觉得连拿笔都没有力气。'
+          }
+        ]
+      },
+      {
+        paraNum: 2,
+        title: '第二段：可恶的蚊子与红色掌印',
+        text: '这个时候，一只不识相的蚊子飞过来叮咬我。“啪”的一声，我狠狠地往手臂打去，蚊子机灵地飞走了，手臂上倒是留下一个手印。血红血红的掌印，像极了成绩册里英文科的分数。刺眼的红色，不断地在我眼里扩大、扩大……可恶的蚊子又飞过来了，忽高忽低，忽近忽远，似乎在向我叫嚣。我拿起电蚊拍，扑上扑下地追打蚊子，却怎么也打不着，我心里又急又气，眼泪迅速夺眶而出。',
+        questions: [
+          {
+            q: '第3题：手臂上血红血红的掌印，让作者想到了什么？',
+            options: [
+              '📕 成绩册里不合格（红色）的英文分数',
+              '🍎 桌子上红红的大苹果',
+              '🎨 美术课画的红太阳'
+            ],
+            correctIdx: 0,
+            feedback: '答对了！红红的手掌印让他想起了成绩册里红色的英文分数。'
+          },
+          {
+            q: '第4题：追打不到蚊子时，作者的心情是怎样的？',
+            options: [
+              '😭 又急又气，眼泪迅速夺眶而出',
+              '😄 觉得很有趣，哈哈大笑',
+              '😌 很平静，继续写作业'
+            ],
+            correctIdx: 0,
+            feedback: '太棒了！作业不会做，蚊子又打不到，所以作者又急又气地哭了出来。'
+          }
+        ]
+      },
+      {
+        paraNum: 3,
+        title: '第三段：妈妈递来一本书',
+        text: '妈妈等我哭够了、气消了才递给我一本书，一行烫金字跃入眼帘——《一代风范李光前》。这是一本生动的画册，述说着华人企业家、教育家和慈善家——李光前先生的奋斗史。',
+        questions: [
+          {
+            q: '第5题：妈妈在什么时候才递给作者那本书？',
+            options: [
+              '🤗 等作者哭够了、气消了之后',
+              '😡 在作者正在发脾气大哭的时候',
+              '🌅 第二天早上起床的时候'
+            ],
+            correctIdx: 0,
+            feedback: '观察入微！妈妈很体贴，等他哭够了、气消了才递书给他。'
+          },
+          {
+            q: '第6题：这本画册里讲述的是谁的奋斗史？',
+            options: [
+              '🌟 李光前先生',
+              '👨‍🏫 学校的英文老师',
+              '👦 作者自己的故事'
+            ],
+            correctIdx: 0,
+            feedback: '完全正确！书名叫做《一代风范李光前》，讲的是李光前先生的奋斗史。'
+          }
+        ]
+      },
+      {
+        paraNum: 4,
+        title: '第四段：李光前先生的求学故事',
+        text: '李光前在10岁那年跟着父亲搬迁到新加坡谋生。因为家境不好，只好报读专收穷苦印度学童的学校。一群穷孩子很快打成一片，他用英语和淡米尔语跟同学沟通；周末时，他坚持学习中文，立志长大后要干一番大事业。',
+        questions: [
+          {
+            q: '第7题：李光前10岁搬到新加坡后，在学校用什么语言和同学沟通？',
+            options: [
+              '🗣️ 英语和淡米尔语',
+              '🇯🇵 日语和韩语',
+              '🇫🇷 法语和德语'
+            ],
+            correctIdx: 0,
+            feedback: '耳朵真灵！他用英语和淡米尔语跟印度同学沟通，很快打成一片。'
+          },
+          {
+            q: '第8题：李光前在周末时坚持做什么？',
+            options: [
+              '📖 坚持学习中文',
+              '🎮 在家里玩游戏',
+              '🎣 去海边抓螃蟹'
+            ],
+            correctIdx: 0,
+            feedback: '太棒了！哪怕平时用英语上学，他在周末依然坚持学习中文，非常有毅力！'
+          }
+        ]
+      }
+    ];
+
+    // =========================================================================
+    // 3. DIAGNOSTIC TELEMETRY & GAME STATE
+    // =========================================================================
+    const State = {
+      screen: 'welcome', // welcome | stage1 | stage2 | stage3_learn | stage3_distract | stage3_quiz | stage4_para | stage4_quiz | report
+      stars: 0,
+      audioHintClicks: 0, // Tracks manual audio clicks in Stages 1-3 (measures decoding vs listening reliance)
+      audioHintDetails: [],
+
+      // Stage 1 metrics
+      s1Index: 0,
+      s1Correct: 0,
+      s1ReactionTimes: [],
+      s1QuestionStartTime: 0,
+      s1Locked: false,
+
+      // Stage 2 metrics
+      s2Index: 0,
+      s2Correct: 0,
+      s2WrongRadicals: [],
+      s2Locked: false,
+
+      // Stage 3 metrics
+      s3GroupIdx: 0,
+      s3QuizIdx: 0,
+      s3Correct: 0,
+      s3Total: 8,
+      s3SwattedCount: 0,
+      s3Locked: false,
+
+      // Stage 4 metrics
+      s4ParaIdx: 0,
+      s4QIdx: 0,
+      s4Correct: 0,
+      s4Total: 8,
+      s4IsSpeaking: false,
+      s4Locked: false
+    };
+
+    // =========================================================================
+    // 4. HELPER UI FUNCTIONS
+    // =========================================================================
+    function showToast(msg, isSuccess = true) {
+      const banner = document.getElementById('toastBanner');
+      const content = document.getElementById('toastContent');
+      content.className = `px-6 py-3 rounded-2xl shadow-xl font-bold text-base flex items-center gap-2 border-2 ${
+        isSuccess
+          ? 'bg-emerald-50 border-emerald-400 text-emerald-800'
+          : 'bg-amber-50 border-amber-400 text-amber-800'
+      }`;
+      content.innerHTML = `<span>${isSuccess ? '🎉' : '💡'}</span><span>${msg}</span>`;
+      banner.classList.remove('opacity-0', 'translate-y-4');
+      clearTimeout(window._toastTimer);
+      window._toastTimer = setTimeout(() => {
+        banner.classList.add('opacity-0', 'translate-y-4');
+      }, 2200);
+    }
+
+    function addStars(n) {
+      State.stars += n;
+      document.getElementById('starCount').textContent = State.stars;
+    }
+
+    function updateProgress(label, pct) {
+      document.getElementById('stageLabel').textContent = label;
+      document.getElementById('progressText').textContent = `${Math.round(pct)}%`;
+      document.getElementById('progressBar').style.width = `${pct}%`;
+    }
+
+    // Manual Audio Hint Handler for Stages 1-3 (NO AUTO-PLAY)
+    function triggerManualHint(text, contextTag) {
+      AudioEngine.init();
+      State.audioHintClicks += 1;
+      State.audioHintDetails.push(contextTag);
+      AudioEngine.speak(text);
+      showToast('已播放标准华语读音，仔细听哦！', true);
+    }
+
+    function jumpToReport() {
+      AudioEngine.stopSpeak();
+      State.screen = 'report';
+      render();
+    }
+
+    // =========================================================================
+    // 5. SCREEN RENDERERS
+    // =========================================================================
+    function render() {
+      const container = document.getElementById('appContainer');
+      switch (State.screen) {
+        case 'welcome':
+          updateProgress('准备出发：侦探报到', 0);
+          container.innerHTML = renderWelcome();
+          break;
+        case 'stage1':
+          updateProgress(`第一关：开胃菜·火眼金睛 (${State.s1Index + 1}/4)`, 5 + (State.s1Index / 4) * 15);
+          container.innerHTML = renderStage1();
+          State.s1QuestionStartTime = performance.now();
+          break;
+        case 'stage2':
+          updateProgress(`第二关：实战一·偏旁解码 (${State.s2Index + 1}/8)`, 20 + (State.s2Index / 8) * 25);
+          container.innerHTML = renderStage2();
+          break;
+        case 'stage3_learn':
+          updateProgress(`第三关：实战二·图像故事速记 (第${State.s3GroupIdx + 1}组记忆)`, 45 + State.s3GroupIdx * 12);
+          container.innerHTML = renderStage3Learn();
+          break;
+        case 'stage3_distract':
+          updateProgress(`第三关：迷你小插曲·赶走嗡嗡蚊子！`, 52 + State.s3GroupIdx * 12);
+          container.innerHTML = renderStage3Distract();
+          break;
+        case 'stage3_quiz':
+          updateProgress(`第三关：实战二·记忆大考验 (${State.s3GroupIdx * 4 + State.s3QuizIdx + 1}/8)`, 55 + ((State.s3GroupIdx * 4 + State.s3QuizIdx) / 8) * 15);
+          container.innerHTML = renderStage3Quiz();
+          break;
+        case 'stage4_para':
+          updateProgress(`第四关：实战三·课文逐段精读 (第${State.s4ParaIdx + 1}/4段)`, 70 + (State.s4ParaIdx / 4) * 25);
+          container.innerHTML = renderStage4Para();
+          autoReadStage4Para();
+          break;
+        case 'stage4_quiz':
+          updateProgress(`第四关：实战三·理解闯关 (${State.s4ParaIdx * 2 + State.s4QIdx + 1}/8)`, 75 + ((State.s4ParaIdx * 2 + State.s4QIdx) / 8) * 25);
+          container.innerHTML = renderStage4Quiz();
+          autoReadStage4Question();
+          break;
+        case 'report':
+          updateProgress('任务圆满完成！', 100);
+          container.innerHTML = renderReport();
+          AudioEngine.sfxFanfare();
+          break;
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // WELCOME SCREEN
+    // -------------------------------------------------------------------------
+    function renderWelcome() {
+      return `
+        <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border-4 border-amber-300 text-center">
+          <div class="w-24 h-24 mx-auto mb-4 rounded-3xl bg-amber-100 border-2 border-amber-300 flex items-center justify-center text-5xl animate-float shadow-md">
+            🔍
+          </div>
+          <span class="inline-block bg-amber-100 text-amber-800 text-xs font-extrabold px-3 py-1 rounded-full mb-2">
+            KSSR SEMAKAN 四年级华语 · 第一课特训
+          </span>
+          <h2 class="title-font text-2xl sm:text-4xl text-slate-800 mb-3">
+            踏上学习的征途
+          </h2>
+          <p class="text-slate-600 text-base sm:text-lg max-w-xl mx-auto mb-6 leading-relaxed">
+            欢迎来到<strong class="text-amber-600">汉字超级侦探社</strong>！这不是考试，而是一场好玩的汉字解密冒险。遇到不会读的字，随时可以按<strong class="text-sky-600">“语音小助手”</strong>帮忙哦！
+          </p>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-left max-w-xl mx-auto mb-8">
+            <div class="bg-amber-50/80 border border-amber-200 p-3.5 rounded-2xl flex items-center gap-3">
+              <span class="text-2xl">👀</span>
+              <div>
+                <div class="font-bold text-slate-800 text-sm">第一关：开胃菜·火眼金睛</div>
+                <div class="text-xs text-slate-500">4道趣味找茬，热身你的超级眼力</div>
+              </div>
+            </div>
+            <div class="bg-sky-50/80 border border-sky-200 p-3.5 rounded-2xl flex items-center gap-3">
+              <span class="text-2xl">🧩</span>
+              <div>
+                <div class="font-bold text-slate-800 text-sm">第二关：第一课偏旁解码</div>
+                <div class="text-xs text-slate-500">8个课文生字，用偏旁猜出字义密码</div>
+              </div>
+            </div>
+            <div class="bg-emerald-50/80 border border-emerald-200 p-3.5 rounded-2xl flex items-center gap-3">
+              <span class="text-2xl">🎨</span>
+              <div>
+                <div class="font-bold text-slate-800 text-sm">第三关：图像故事速记</div>
+                <div class="text-xs text-slate-500">8个新词卡片 + 赶蚊子小游戏挑战</div>
+              </div>
+            </div>
+            <div class="bg-purple-50/80 border border-purple-200 p-3.5 rounded-2xl flex items-center gap-3">
+              <span class="text-2xl">🎧</span>
+              <div>
+                <div class="font-bold text-slate-800 text-sm">第四关：课文逐段听读闯关</div>
+                <div class="text-xs text-slate-500">第1至第4段播音朗读，轻松答理解题</div>
+              </div>
+            </div>
+          </div>
+
+          <button onclick="startGame()" class="btn-3d bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-black text-lg sm:text-xl px-10 py-4 rounded-2xl cursor-pointer">
+            🚀 开始侦探冒险！
+          </button>
+        </div>
+      `;
+    }
+
+    function startGame() {
+      AudioEngine.init();
+      AudioEngine.sfxClick();
+      State.screen = 'stage1';
+      State.s1Index = 0;
+      render();
+    }
+
+    // -------------------------------------------------------------------------
+    // STAGE 1: WARM-UP VISUAL DISCRIMINATION (4 ITEMS, MANUAL AUDIO ONLY)
+    // -------------------------------------------------------------------------
+    function renderStage1() {
+      const q = STAGE1_QUESTIONS[State.s1Index];
+      const gridSize = 9;
+      const targetPos = Math.floor(Math.random() * gridSize);
+      let cellsHtml = '';
+
+      for (let i = 0; i < gridSize; i++) {
+        const isTarget = i === targetPos;
+        const char = isTarget ? q.target : q.distractor;
+        cellsHtml += `
+          <button
+            onclick="handleStage1Pick(${isTarget}, this)"
+            class="hanzi-box btn-3d aspect-square rounded-2xl bg-amber-50 hover:bg-amber-100 border-2 border-amber-300 text-4xl sm:text-5xl font-bold text-slate-800 flex items-center justify-center cursor-pointer transition"
+          >
+            ${char}
+          </button>
+        `;
+      }
+
+      return `
+        <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border-4 border-amber-300">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+            <span class="bg-amber-100 text-amber-800 font-bold text-xs px-3 py-1 rounded-full">
+              第一关 · 视觉找茬 (${State.s1Index + 1}/4)
+            </span>
+            <button
+              onclick="triggerManualHint('${q.audioText}', '第一关第${State.s1Index + 1}题')"
+              class="flex items-center gap-1.5 bg-sky-100 hover:bg-sky-200 text-sky-800 border border-sky-300 text-xs sm:text-sm font-bold px-3.5 py-2 rounded-xl cursor-pointer transition"
+            >
+              <span>🔊</span>
+              <span>不会读？点我听提示</span>
+            </button>
+          </div>
+
+          <h2 class="text-xl sm:text-2xl font-black text-slate-800 text-center mb-2">
+            ${q.prompt}
+          </h2>
+          <p class="text-center text-sm text-slate-500 mb-6">💡 提示：${q.hint}</p>
+
+          <div class="grid grid-cols-3 gap-3 sm:gap-4 max-w-xs sm:max-w-sm mx-auto">
+            ${cellsHtml}
+          </div>
+        </div>
+      `;
+    }
+
+    function handleStage1Pick(isTarget, btnEl) {
+      if (State.s1Locked) return;
+      if (isTarget) {
+        State.s1Locked = true;
+        const elapsed = ((performance.now() - State.s1QuestionStartTime) / 1000).toFixed(2);
+        State.s1ReactionTimes.push(parseFloat(elapsed));
+        State.s1Correct += 1;
+        addStars(1);
+        AudioEngine.sfxCorrect();
+
+        btnEl.classList.remove('bg-amber-50', 'border-amber-300');
+        btnEl.classList.add('bg-emerald-400', 'border-emerald-600', 'text-white', 'scale-105');
+        showToast(`太神了！只用了 ${elapsed} 秒就找到了！`, true);
+
+        setTimeout(() => {
+          State.s1Locked = false;
+          State.s1Index += 1;
+          if (State.s1Index < STAGE1_QUESTIONS.length) {
+            render();
+          } else {
+            State.screen = 'stage2';
+            render();
+          }
+        }, 900);
+      } else {
+        AudioEngine.sfxWrong();
+        btnEl.classList.add('bg-rose-100', 'border-rose-400', 'text-rose-600');
+        showToast('差一点点！再仔细看看笔画哦~', false);
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // STAGE 2: LESSON 1 RADICAL DECODING (8 ITEMS, MANUAL AUDIO ONLY)
+    // -------------------------------------------------------------------------
+    function renderStage2() {
+      const q = STAGE2_QUESTIONS[State.s2Index];
+      const optionsHtml = q.options.map((opt, idx) => `
+        <button
+          onclick="handleStage2Pick(${idx}, ${opt.correct}, this)"
+          class="btn-3d w-full text-left p-4 rounded-2xl bg-slate-50 hover:bg-sky-50 border-2 border-slate-200 hover:border-sky-400 font-bold text-base sm:text-lg text-slate-800 transition cursor-pointer flex items-center justify-between"
+        >
+          <span>${opt.text}</span>
+          <span class="text-slate-300 text-xl">➔</span>
+        </button>
+      `).join('');
+
+      return `
+        <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border-4 border-sky-300">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+            <span class="bg-sky-100 text-sky-800 font-bold text-xs px-3 py-1 rounded-full">
+              第二关 ·《踏上学习的征途》偏旁解码 (${State.s2Index + 1}/8)
+            </span>
+            <button
+              onclick="triggerManualHint('${q.audioText}', '第二关生字:${q.targetWord}')"
+              class="flex items-center gap-1.5 bg-amber-100 hover:bg-amber-200 text-amber-800 border border-amber-300 text-xs sm:text-sm font-bold px-3.5 py-2 rounded-xl cursor-pointer transition"
+            >
+              <span>🔊</span>
+              <span>不会读题目？点我听发音</span>
+            </button>
+          </div>
+
+          <!-- Lesson Context Box -->
+          <div class="bg-amber-50 border-l-4 border-amber-400 p-3.5 rounded-r-2xl mb-5">
+            <div class="text-xs font-bold text-amber-700 mb-1">📖 四年级第一课原句线索：</div>
+            <div class="text-sm sm:text-base text-slate-700 font-medium">${q.sentence}</div>
+          </div>
+
+          <!-- Target Character & Radical Spotlight -->
+          <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6 bg-sky-50/70 p-4 rounded-2xl border border-sky-200">
+            <div class="hanzi-box text-4xl sm:text-5xl font-black text-sky-700 bg-white px-5 py-3 rounded-2xl shadow-sm border-2 border-sky-300">
+              ${q.targetWord}
+            </div>
+            <div class="text-center sm:text-left">
+              <span class="inline-block bg-sky-600 text-white text-xs font-bold px-2.5 py-0.5 rounded-md mb-1">
+                密码偏旁：${q.radicalName}
+              </span>
+              <h3 class="text-lg sm:text-xl font-black text-slate-800">
+                ${q.question}
+              </h3>
+            </div>
+          </div>
+
+          <div class="space-y-3" id="s2Options">
+            ${optionsHtml}
+          </div>
+
+          <div id="s2FeedbackBox" class="hidden mt-5 p-4 rounded-2xl bg-emerald-50 border-2 border-emerald-300 text-emerald-900">
+            <div class="font-bold text-base mb-2" id="s2FeedbackText"></div>
+            <button onclick="nextStage2()" class="btn-3d bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-6 py-2.5 rounded-xl cursor-pointer">
+              继续下一题 ➔
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function handleStage2Pick(idx, isCorrect, btnEl) {
+      if (State.s2Locked) return;
+      const q = STAGE2_QUESTIONS[State.s2Index];
+
+      if (isCorrect) {
+        State.s2Locked = true;
+        State.s2Correct += 1;
+        addStars(2);
+        AudioEngine.sfxCorrect();
+
+        btnEl.classList.remove('bg-slate-50', 'border-slate-200');
+        btnEl.classList.add('bg-emerald-100', 'border-emerald-500', 'text-emerald-900');
+        document.getElementById('s2FeedbackText').textContent = `🌟 ${q.explanation}`;
+        document.getElementById('s2FeedbackBox').classList.remove('hidden');
+      } else {
+        AudioEngine.sfxWrong();
+        if (!State.s2WrongRadicals.includes(q.radicalName)) {
+          State.s2WrongRadicals.push(q.radicalName);
+        }
+        btnEl.classList.add('bg-rose-100', 'border-rose-400', 'text-rose-700');
+        showToast('再看看它的偏旁部首代表什么哦！', false);
+      }
+    }
+
+    function nextStage2() {
+      AudioEngine.sfxClick();
+      State.s2Locked = false;
+      State.s2Index += 1;
+      if (State.s2Index < STAGE2_QUESTIONS.length) {
+        render();
+      } else {
+        State.screen = 'stage3_learn';
+        State.s3GroupIdx = 0;
+        render();
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // STAGE 3: VISUAL STORY MNEMONICS (LEARN -> DISTRACTION -> RECALL QUIZ)
+    // -------------------------------------------------------------------------
+    function renderStage3Learn() {
+      const group = STAGE3_GROUPS[State.s3GroupIdx];
+      const cardsHtml = group.cards.map(c => `
+        <div class="bg-emerald-50/60 border-2 border-emerald-200 rounded-2xl p-4 flex flex-col justify-between shadow-sm">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md">${c.pinyin}</span>
+              <button
+                onclick="triggerManualHint('${c.word}。${c.meaning}', '第三关词卡:${c.word}')"
+                class="text-xs bg-white hover:bg-amber-100 text-amber-800 border border-amber-300 px-2.5 py-1 rounded-lg font-bold cursor-pointer"
+              >
+                🔊 听读音
+              </button>
+            </div>
+            ${c.svg}
+            <div class="hanzi-box text-3xl font-black text-center text-slate-800 my-2">${c.word}</div>
+            <div class="text-xs font-bold text-emerald-800 text-center mb-1.5">${c.meaning}</div>
+          </div>
+          <p class="text-xs text-slate-600 bg-white p-2.5 rounded-xl border border-emerald-100 leading-relaxed">
+            💡 <strong>画面记忆：</strong>${c.story}
+          </p>
+        </div>
+      `).join('');
+
+      return `
+        <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border-4 border-emerald-300">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <span class="bg-emerald-100 text-emerald-800 font-bold text-xs px-3 py-1 rounded-full">
+              第三关 · 图像故事速记 (${group.title})
+            </span>
+            <span class="text-xs font-bold text-slate-500">👀 用眼睛记住画面和字形！</span>
+          </div>
+
+          <h2 class="text-xl sm:text-2xl font-black text-slate-800 mb-2 text-center">
+            侦探记忆特训：记住这 4 个课文新词！
+          </h2>
+          <p class="text-center text-sm text-slate-500 mb-5">
+            看一看图画，记一记故事（不会读可以点卡片上的 🔊 听发音），准备好就点下方按钮挑战！
+          </p>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+            ${cardsHtml}
+          </div>
+
+          <div class="text-center">
+            <button onclick="startStage3Distraction()" class="btn-3d bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-black text-lg px-8 py-3.5 rounded-2xl cursor-pointer">
+              ⚡ 我记住了！进入大脑考验 ➔
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function startStage3Distraction() {
+      AudioEngine.sfxClick();
+      State.s3SwattedCount = 0;
+      State.screen = 'stage3_distract';
+      render();
+    }
+
+    function renderStage3Distract() {
+      return `
+        <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border-4 border-orange-300 text-center">
+          <span class="inline-block bg-orange-100 text-orange-800 text-xs font-bold px-3 py-1 rounded-full mb-2">
+            干扰小挑战 · 保护李光前专心读书！
+          </span>
+          <h2 class="text-xl sm:text-2xl font-black text-slate-800 mb-2">
+            啪！快点击赶走这 3 只嗡嗡叫的蚊子！
+          </h2>
+          <p class="text-sm text-slate-500 mb-6">赶走所有蚊子后，马上考验你刚才记住的新词哦！</p>
+
+          <div class="relative h-56 bg-amber-50 rounded-3xl border-2 border-dashed border-amber-300 flex items-center justify-around p-4 overflow-hidden">
+            <button onclick="swatMosquito(this)" class="mosquito-move text-5xl sm:text-6xl p-3 rounded-full hover:bg-rose-100 cursor-pointer transition">🦟</button>
+            <button onclick="swatMosquito(this)" class="mosquito-move text-5xl sm:text-6xl p-3 rounded-full hover:bg-rose-100 cursor-pointer transition" style="animation-delay: 0.5s">🦟</button>
+            <button onclick="swatMosquito(this)" class="mosquito-move text-5xl sm:text-6xl p-3 rounded-full hover:bg-rose-100 cursor-pointer transition" style="animation-delay: 1.1s">🦟</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function swatMosquito(btn) {
+      if (btn.dataset.swatted) return;
+      btn.dataset.swatted = 'true';
+      AudioEngine.sfxCorrect();
+      btn.textContent = '💥';
+      btn.classList.remove('mosquito-move');
+      State.s3SwattedCount += 1;
+
+      if (State.s3SwattedCount >= 3) {
+        showToast('啪！三只蚊子全消灭！现在来考考你的记忆力！', true);
+        setTimeout(() => {
+          State.screen = 'stage3_quiz';
+          State.s3QuizIdx = 0;
+          render();
+        }, 800);
+      }
+    }
+
+    function renderStage3Quiz() {
+      const group = STAGE3_GROUPS[State.s3GroupIdx];
+      const q = group.quiz[State.s3QuizIdx];
+
+      // Shuffle options deterministically per question index
+      const opts = [...q.options].sort((a, b) => a.localeCompare(b));
+
+      const optsHtml = opts.map(word => `
+        <button
+          onclick="handleStage3QuizPick('${word}', '${q.answer}', this)"
+          class="hanzi-box btn-3d p-5 rounded-2xl bg-emerald-50 hover:bg-emerald-100 border-2 border-emerald-300 text-3xl sm:text-4xl font-black text-slate-800 cursor-pointer transition"
+        >
+          ${word}
+        </button>
+      `).join('');
+
+      return `
+        <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border-4 border-emerald-400">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+            <span class="bg-emerald-100 text-emerald-800 font-bold text-xs px-3 py-1 rounded-full">
+              第三关 · 闪卡回忆测试 (${State.s3GroupIdx * 4 + State.s3QuizIdx + 1}/8)
+            </span>
+            <button
+              onclick="triggerManualHint('${q.clue}', '第三关回忆第${State.s3GroupIdx * 4 + State.s3QuizIdx + 1}题')"
+              class="flex items-center gap-1.5 bg-amber-100 hover:bg-amber-200 text-amber-800 border border-amber-300 text-xs sm:text-sm font-bold px-3.5 py-2 rounded-xl cursor-pointer"
+            >
+              <span>🔊</span>
+              <span>不会读提示？点我听</span>
+            </button>
+          </div>
+
+          <div class="bg-slate-50 border-2 border-slate-200 p-5 rounded-2xl text-center mb-6">
+            <div class="text-xs font-bold text-emerald-600 mb-1">🧠 凭刚才的画面记忆选出正确词语：</div>
+            <h3 class="text-lg sm:text-2xl font-black text-slate-800 leading-snug">
+              ${q.clue}
+            </h3>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4 max-w-md mx-auto">
+            ${optsHtml}
+          </div>
+        </div>
+      `;
+    }
+
+    function handleStage3QuizPick(picked, answer, btnEl) {
+      if (State.s3Locked) return;
+      if (picked === answer) {
+        State.s3Locked = true;
+        State.s3Correct += 1;
+        addStars(2);
+        AudioEngine.sfxCorrect();
+
+        btnEl.classList.remove('bg-emerald-50', 'border-emerald-300');
+        btnEl.classList.add('bg-emerald-500', 'border-emerald-700', 'text-white');
+        showToast(`记忆力超强！就是【${answer}】！`, true);
+
+        setTimeout(() => {
+          State.s3Locked = false;
+          const group = STAGE3_GROUPS[State.s3GroupIdx];
+          if (State.s3QuizIdx + 1 < group.quiz.length) {
+            State.s3QuizIdx += 1;
+            render();
+          } else if (State.s3GroupIdx + 1 < STAGE3_GROUPS.length) {
+            State.s3GroupIdx += 1;
+            State.screen = 'stage3_learn';
+            render();
+          } else {
+            State.screen = 'stage4_para';
+            State.s4ParaIdx = 0;
+            render();
+          }
+        }, 850);
+      } else {
+        AudioEngine.sfxWrong();
+        btnEl.classList.add('bg-rose-100', 'border-rose-400', 'text-rose-600');
+        showToast('再想一想刚才的图画故事哦！', false);
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // STAGE 4: READING COMPREHENSION (PARAGRAPHS 1-4 WITH AUTO MANDARIN AUDIO)
+    // -------------------------------------------------------------------------
+    function renderStage4Para() {
+      const p = STAGE4_PARAGRAPHS[State.s4ParaIdx];
+      return `
+        <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border-4 border-purple-300">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+            <span class="bg-purple-100 text-purple-800 font-bold text-xs px-3 py-1 rounded-full">
+              第四关 · 课文逐段精读 (第 ${p.paraNum} / 4 段)
+            </span>
+            <div class="flex items-center gap-2">
+              <button
+                onclick="autoReadStage4Para()"
+                class="flex items-center gap-1 bg-purple-600 hover:bg-purple-700 text-white text-xs sm:text-sm font-bold px-3.5 py-2 rounded-xl cursor-pointer shadow"
+              >
+                <span>🔊</span>
+                <span>再听一遍本段</span>
+              </button>
+              <button
+                onclick="AudioEngine.stopSpeak()"
+                class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold px-2.5 py-2 rounded-xl cursor-pointer"
+              >
+                ⏹️ 暂停
+              </button>
+            </div>
+          </div>
+
+          <h2 class="text-xl sm:text-2xl font-black text-purple-900 mb-3">
+            📖 ${p.title}
+          </h2>
+
+          <div id="paraReadingCard" class="bg-purple-50/80 border-2 border-purple-200 rounded-2xl p-5 sm:p-6 mb-6 transition-all">
+            <p class="text-lg sm:text-2xl text-slate-800 leading-loose tracking-wide font-medium">
+              ${p.text}
+            </p>
+          </div>
+
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-3 bg-amber-50 p-4 rounded-2xl border border-amber-200">
+            <div class="text-sm text-amber-900 font-medium">
+              🎧 <strong>听读小窍门：</strong>跟着标准播音员一边听、一边用眼睛指着课文看！
+            </div>
+            <button
+              onclick="goToStage4Quiz()"
+              class="btn-3d whitespace-nowrap bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-black px-6 py-3 rounded-xl cursor-pointer"
+            >
+              听懂了，开始答题 ➔
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function autoReadStage4Para() {
+      const p = STAGE4_PARAGRAPHS[State.s4ParaIdx];
+      const card = document.getElementById('paraReadingCard');
+      AudioEngine.speak(p.text, {
+        rate: 0.88,
+        onStart: () => {
+          if (card) card.classList.add('speaking-active');
+        },
+        onEnd: () => {
+          if (card) card.classList.remove('speaking-active');
+        }
+      });
+    }
+
+    function goToStage4Quiz() {
+      AudioEngine.stopSpeak();
+      AudioEngine.sfxClick();
+      State.screen = 'stage4_quiz';
+      State.s4QIdx = 0;
+      render();
+    }
+
+    function renderStage4Quiz() {
+      const p = STAGE4_PARAGRAPHS[State.s4ParaIdx];
+      const q = p.questions[State.s4QIdx];
+
+      const optsHtml = q.options.map((opt, idx) => `
+        <button
+          onclick="handleStage4QuizPick(${idx}, ${q.correctIdx}, this)"
+          class="btn-3d w-full text-left p-4 rounded-2xl bg-slate-50 hover:bg-purple-50 border-2 border-slate-200 hover:border-purple-400 font-bold text-base sm:text-lg text-slate-800 transition cursor-pointer flex items-center justify-between"
+        >
+          <span>${opt}</span>
+          <span class="text-slate-300 text-xl">➔</span>
+        </button>
+      `).join('');
+
+      return `
+        <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border-4 border-purple-300">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+            <span class="bg-purple-100 text-purple-800 font-bold text-xs px-3 py-1 rounded-full">
+              第 ${p.paraNum} 段理解闯关 · 问题 (${State.s4ParaIdx * 2 + State.s4QIdx + 1}/8)
+            </span>
+            <div class="flex items-center gap-2">
+              <button
+                onclick="autoReadStage4Question()"
+                class="flex items-center gap-1 bg-purple-100 hover:bg-purple-200 text-purple-800 border border-purple-300 text-xs sm:text-sm font-bold px-3 py-1.5 rounded-xl cursor-pointer"
+              >
+                <span>🔊</span>
+                <span>重听题目</span>
+              </button>
+              <button
+                onclick="backToParaReview()"
+                class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3 py-1.5 rounded-xl cursor-pointer"
+              >
+                🔙 回看本段课文
+              </button>
+            </div>
+          </div>
+
+          <div id="s4QuestionBox" class="bg-purple-50 border-2 border-purple-200 p-5 rounded-2xl mb-5">
+            <h3 class="text-lg sm:text-2xl font-black text-purple-950 leading-snug">
+              ${q.q}
+            </h3>
+          </div>
+
+          <div class="space-y-3">
+            ${optsHtml}
+          </div>
+
+          <div id="s4FeedbackBox" class="hidden mt-5 p-4 rounded-2xl bg-emerald-50 border-2 border-emerald-300 text-emerald-900">
+            <div class="font-bold text-base mb-2" id="s4FeedbackText"></div>
+            <button onclick="nextStage4()" class="btn-3d bg-purple-600 hover:bg-purple-700 text-white font-bold px-6 py-2.5 rounded-xl cursor-pointer">
+              下一题 ➔
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function autoReadStage4Question() {
+      const p = STAGE4_PARAGRAPHS[State.s4ParaIdx];
+      const q = p.questions[State.s4QIdx];
+      const fullRead = `${q.q} 选项有：${q.options.map(o => o.replace(/^[^\u4e00-\u9fa5]+/, '')).join('；或者，')}`;
+      const box = document.getElementById('s4QuestionBox');
+      AudioEngine.speak(fullRead, {
+        rate: 0.92,
+        onStart: () => { if (box) box.classList.add('speaking-active'); },
+        onEnd: () => { if (box) box.classList.remove('speaking-active'); }
+      });
+    }
+
+    function backToParaReview() {
+      AudioEngine.stopSpeak();
+      State.screen = 'stage4_para';
+      render();
+    }
+
+    function handleStage4QuizPick(idx, correctIdx, btnEl) {
+      if (State.s4Locked) return;
+      const p = STAGE4_PARAGRAPHS[State.s4ParaIdx];
+      const q = p.questions[State.s4QIdx];
+
+      if (idx === correctIdx) {
+        State.s4Locked = true;
+        State.s4Correct += 1;
+        addStars(2);
+        AudioEngine.stopSpeak();
+        AudioEngine.sfxCorrect();
+
+        btnEl.classList.remove('bg-slate-50', 'border-slate-200');
+        btnEl.classList.add('bg-emerald-100', 'border-emerald-500', 'text-emerald-900');
+        document.getElementById('s4FeedbackText').textContent = `🎉 ${q.feedback}`;
+        document.getElementById('s4FeedbackBox').classList.remove('hidden');
+      } else {
+        AudioEngine.sfxWrong();
+        btnEl.classList.add('bg-rose-100', 'border-rose-400', 'text-rose-700');
+        showToast('再仔细回想刚才听到的故事内容哦！', false);
+      }
+    }
+
+    function nextStage4() {
+      AudioEngine.stopSpeak();
+      AudioEngine.sfxClick();
+      State.s4Locked = false;
+      const p = STAGE4_PARAGRAPHS[State.s4ParaIdx];
+
+      if (State.s4QIdx + 1 < p.questions.length) {
+        State.s4QIdx += 1;
+        render();
+      } else if (State.s4ParaIdx + 1 < STAGE4_PARAGRAPHS.length) {
+        State.s4ParaIdx += 1;
+        State.screen = 'stage4_para';
+        render();
+      } else {
+        State.screen = 'report';
+        render();
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // END CERTIFICATE + TEACHER DIAGNOSTIC REPORT
+    // -------------------------------------------------------------------------
+    function renderReport() {
+      const avgSpeed = State.s1ReactionTimes.length
+        ? (State.s1ReactionTimes.reduce((a, b) => a + b, 0) / State.s1ReactionTimes.length).toFixed(2)
+        : '—';
+
+      const radicalAccuracy = Math.round((State.s2Correct / 8) * 100);
+      const memoryAccuracy = Math.round((State.s3Correct / 8) * 100);
+      const compAccuracy = Math.round((State.s4Correct / 8) * 100);
+
+      // Determine Learning Style & Teaching Prescription
+      let learningType = '';
+      let prescription = '';
+
+      if (radicalAccuracy >= memoryAccuracy && radicalAccuracy >= 60) {
+        learningType = '🧩 偏旁逻辑推理型（以字带字见效快）';
+        prescription = `该生对汉字的<strong>部首归类逻辑</strong>敏感度较高（偏旁解码正确率 ${radicalAccuracy}%）。明年四年级教学建议：<strong>采用“部首家族串连法”</strong>（如一次集中认读“虫字旁：螃、蟹、蚊”、“走之底：迁、递、途”），避免孤立死背单个生字，能大幅加速识字扩容。`;
+      } else if (memoryAccuracy > radicalAccuracy && memoryAccuracy >= 60) {
+        learningType = '🎨 视觉图像故事型（画面记忆留存率高）';
+        prescription = `该生对<strong>图像联想与故事情境</strong>反应敏锐（闪卡回忆留存率 ${memoryAccuracy}%）。明年四年级教学建议：<strong>将抽象生字转化为具象画面或字源小故事</strong>（如“嚣=四个口在头边吵闹”），先建立视觉印象再过渡到书写。`;
+      } else {
+        learningType = '🎧 听觉先行·双通道辅助型（听懂强于认读）';
+        prescription = `该生具备良好的口语听力理解基础（听读理解得分 ${State.s4Correct}/8），但独立视觉解码仍需脚手架。明年教学建议：<strong>充分利用“先听后读、手指指读”策略</strong>，先通过标准朗读建立课文熟悉度，再圈出高频核心词逐个突破。`;
+      }
+
+      const audioDependencyNote = State.audioHintClicks <= 3
+        ? `主动语音求助仅 <strong>${State.audioHintClicks} 次</strong>，说明孩子愿意尝试独立辨认字形，畏难情绪较低。`
+        : `前三关共点击语音求助 <strong>${State.audioHintClicks} 次</strong>（${State.audioHintDetails.slice(0, 5).join('、')}${State.audioHintDetails.length > 5 ? '等' : ''}），反映出其对陌生汉字存在“怕读错”的心理依赖，明年需多给予识字成功体验以建立自信。`;
+
+      return `
+        <!-- Student Detective Certificate -->
+        <div class="bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 rounded-3xl p-6 sm:p-8 shadow-xl border-4 border-amber-400 text-center mb-8 relative overflow-hidden">
+          <div class="text-5xl sm:text-6xl mb-3">🏆</div>
+          <span class="inline-block bg-amber-500 text-white text-xs font-black px-3.5 py-1 rounded-full tracking-wider mb-2">
+            荣耀认证 · 四年级华文先锋小侦探
+          </span>
+          <h2 class="title-font text-2xl sm:text-4xl text-amber-900 mb-2">
+            恭喜完成《踏上学习的征途》特训！
+          </h2>
+          <p class="text-slate-600 text-sm sm:text-base max-w-lg mx-auto mb-5">
+            你成功破解了四年级第一课的偏旁密码、记住了 8 个核心新词，还听懂了李光前先生的奋斗故事！一共获得 <strong class="text-amber-600 text-xl">${State.stars} 颗侦探星星</strong>！
+          </p>
+          <div class="inline-flex flex-wrap justify-center gap-2 text-xs font-bold">
+            <span class="bg-white border border-amber-300 text-amber-800 px-3 py-1.5 rounded-xl">👀 火眼金睛徽章</span>
+            <span class="bg-white border border-sky-300 text-sky-800 px-3 py-1.5 rounded-xl">🧩 偏旁解码大师</span>
+            <span class="bg-white border border-emerald-300 text-emerald-800 px-3 py-1.5 rounded-xl">🎨 超级图像记忆王</span>
+            <span class="bg-white border border-purple-300 text-purple-800 px-3 py-1.5 rounded-xl">🎧 课文听读小能手</span>
+          </div>
+        </div>
+
+        <!-- Teacher Exclusive Diagnostic Report -->
+        <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border-2 border-slate-300">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b-2 border-slate-100 pb-4 mb-6">
+            <div>
+              <span class="text-xs font-extrabold uppercase tracking-wider text-indigo-600">TEACHER DIAGNOSTIC DASHBOARD</span>
+              <h3 class="text-xl sm:text-2xl font-black text-slate-800">
+                📋 老师专属：四年级衔接教学诊断报告
+              </h3>
+            </div>
+            <button onclick="resetFullTest()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3.5 py-2 rounded-xl border border-slate-300 cursor-pointer">
+              🔄 重置重新测试
+            </button>
+          </div>
+
+          <!-- 4 Core Metrics Grid -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+            <div class="bg-amber-50 border border-amber-200 p-3.5 rounded-2xl">
+              <div class="text-xs font-bold text-amber-700">1. 视觉辨识速度</div>
+              <div class="text-2xl font-black text-slate-800 mt-1">${avgSpeed} <span class="text-xs font-normal">秒/题</span></div>
+              <div class="text-xs text-slate-500 mt-0.5">答对 ${State.s1Correct}/4 题</div>
+            </div>
+            <div class="bg-sky-50 border border-sky-200 p-3.5 rounded-2xl">
+              <div class="text-xs font-bold text-sky-700">2. 偏旁解码能力</div>
+              <div class="text-2xl font-black text-slate-800 mt-1">${State.s2Correct}/8 <span class="text-xs font-normal">(${radicalAccuracy}%)</span></div>
+              <div class="text-xs text-slate-500 mt-0.5">构字逻辑推理力</div>
+            </div>
+            <div class="bg-emerald-50 border border-emerald-200 p-3.5 rounded-2xl">
+              <div class="text-xs font-bold text-emerald-700">3. 图像记忆留存</div>
+              <div class="text-2xl font-black text-slate-800 mt-1">${State.s3Correct}/8 <span class="text-xs font-normal">(${memoryAccuracy}%)</span></div>
+              <div class="text-xs text-slate-500 mt-0.5">抗干扰短时记忆</div>
+            </div>
+            <div class="bg-purple-50 border border-purple-200 p-3.5 rounded-2xl">
+              <div class="text-xs font-bold text-purple-700">4. 听读课文理解</div>
+              <div class="text-2xl font-black text-slate-800 mt-1">${State.s4Correct}/8 <span class="text-xs font-normal">(${compAccuracy}%)</span></div>
+              <div class="text-xs text-slate-500 mt-0.5">第1-4段语意抓取</div>
+            </div>
+          </div>
+
+          <!-- Detailed Qualitative Analysis -->
+          <div class="space-y-4 text-sm sm:text-base text-slate-700">
+            <div class="bg-indigo-50/70 border border-indigo-200 p-4 rounded-2xl">
+              <div class="font-black text-indigo-900 mb-1">🎯 判定学习优势通道：${learningType}</div>
+              <p class="leading-relaxed text-slate-700">${prescription}</p>
+            </div>
+
+            <div class="bg-slate-50 border border-slate-200 p-4 rounded-2xl">
+              <div class="font-black text-slate-800 mb-1">🔊 独立识字 vs 语音依赖度观察</div>
+              <p class="leading-relaxed">${audioDependencyNote}</p>
+            </div>
+
+            ${State.s2WrongRadicals.length > 0 ? `
+              <div class="bg-rose-50/70 border border-rose-200 p-4 rounded-2xl">
+                <div class="font-black text-rose-900 mb-1">⚠️ 明年第一课需重点巩固的偏旁：</div>
+                <p class="text-rose-800">学生在 <strong>${State.s2WrongRadicals.join('、')}</strong> 的推理上出现过犹豫，正式授课时可优先用实物或动作演示这几个偏旁。</p>
+              </div>
+            ` : `
+              <div class="bg-emerald-50/70 border border-emerald-200 p-4 rounded-2xl">
+                <div class="font-black text-emerald-900 mb-1">✨ 偏旁敏感度极佳：</div>
+                <p class="text-emerald-800">8个第一课核心偏旁（虫、口、目、扌、辶、氵、讠）全部一次推理成功！孩子具备很强的“看偏旁猜字义”潜力，只要建立信心，四年级识字量会提升很快。</p>
+              </div>
+            `}
+          </div>
+        </div>
+      `;
+    }
+
+    function resetFullTest() {
+      AudioEngine.stopSpeak();
+      Object.assign(State, {
+        screen: 'welcome',
+        stars: 0,
+        audioHintClicks: 0,
+        audioHintDetails: [],
+        s1Index: 0,
+        s1Correct: 0,
+        s1ReactionTimes: [],
+        s1Locked: false,
+        s2Index: 0,
+        s2Correct: 0,
+        s2WrongRadicals: [],
+        s2Locked: false,
+        s3GroupIdx: 0,
+        s3QuizIdx: 0,
+        s3Correct: 0,
+        s3SwattedCount: 0,
+        s3Locked: false,
+        s4ParaIdx: 0,
+        s4QIdx: 0,
+        s4Correct: 0,
+        s4Locked: false
+      });
+      document.getElementById('starCount').textContent = '0';
+      render();
+    }
+
+    // Initialize on load
+    window.onload = function () {
+      AudioEngine.init();
+      render();
+    };
+  </script>
+</body>
+</html>
